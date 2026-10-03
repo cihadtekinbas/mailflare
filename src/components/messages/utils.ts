@@ -1,7 +1,8 @@
 import type { Message } from "@/hooks/types";
 import { authFetch } from "@/lib/auth/client";
+import { markMessagesReadInCaches } from "@/hooks/utils";
 import { getEmailDisplayName, splitEmailAddressList } from "@/lib/email/address";
-import dayjs from "dayjs";
+import { formatUserDate, getUserTimeZone, zonedDateFields } from "@/lib/time/utils";
 import type { MailboxOption } from "@/components/mailbox-provider";
 import type { EmailPageTitleInput } from "./types";
 import type { MessageFolderConfig } from "./types";
@@ -27,7 +28,7 @@ export function formatRecipientSummary(toAddr: string, firstContactName?: string
 }
 
 export function getMessagePartyClassName(message: Message, folder: MessageFolderConfig["folder"]) {
-	if (folder === "drafts") return "truncate font-semibold text-red-600";
+	if (folder === "drafts") return "truncate font-medium text-red-600";
 
 	const unread = isMessageListRowUnread(message);
 	return `truncate ${unread ? "font-bold text-neutral-900" : "text-neutral-800"}`;
@@ -45,10 +46,12 @@ export function getMessagePreview(message: Message, folder: MessageFolderConfig[
 }
 
 export function formatMessageListTimestamp(createdAt: string): string {
-	const date = dayjs(createdAt);
-	if (date.isSame(dayjs(), "day")) return date.format("hh:mm A");
-	if (date.isSame(dayjs(), "year")) return date.format("MMM DD");
-	return date.format("MMM DD, YYYY");
+	const zone = getUserTimeZone();
+	const date = zonedDateFields(new Date(createdAt), zone);
+	const today = zonedDateFields(new Date(), zone);
+	if (date.toISOString().slice(0, 10) === today.toISOString().slice(0, 10)) return formatUserDate(createdAt, { hour: "2-digit", minute: "2-digit" });
+	if (date.getUTCFullYear() === today.getUTCFullYear()) return formatUserDate(createdAt, { month: "short", day: "2-digit" });
+	return formatUserDate(createdAt, { month: "short", day: "2-digit", year: "numeric" });
 }
 
 export function getPageRange(offset: number, count: number, total: number): PageRange {
@@ -77,13 +80,14 @@ export function formatEmailPageTitle({ location, total, unread, emailAddress }: 
 	return `${location} (${count})${suffix}`;
 }
 
-export async function runBulkMessageAction(messageIds: string[], action: string, notify = true) {
+export async function runBulkMessageAction(messageIds: string[], action: string, notify = true, folderId?: string) {
 	const response = await authFetch("/api/messages/bulk", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ messageIds, action }),
+		body: JSON.stringify({ messageIds, action, folderId }),
 	});
 
 	if (!response.ok) throw new Error("Unable to update selected messages");
+	if (action === "read" || action === "unread") markMessagesReadInCaches(messageIds, action === "read");
 	if (notify) window.dispatchEvent(new Event("mailflare:messages-changed"));
 }

@@ -1,6 +1,6 @@
 {
   "name": "mailflare",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "scripts": {
     "dev": "npm run db:bundle && vite dev --port 3000",
@@ -86,6 +86,7 @@
     "qrcode": "^1.5.4",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "react-hot-toast": "^2.6.1",
     "react-markdown": "^10.1.0",
     "react-server-dom-webpack": "^19.2.6",
     "remark-gfm": "^4.0.1",

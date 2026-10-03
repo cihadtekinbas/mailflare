@@ -1,6 +1,7 @@
 import { Building2, Sparkles } from "lucide-react";
 import type { LicensePlan } from "./types";
 import { authFetch } from "@/lib/auth/client";
+import { formatUserDate } from "@/lib/time/utils";
 import { LICENSE_STATUS_CHANGED_EVENT } from "@/lib/licenses/constants";
 import type { ActivatableLicensePlan, LicenseAction, LicenseResponse } from "./types";
 
@@ -17,6 +18,7 @@ export const LICENSE_PLANS: LicensePlan[] = [
 	{
 		name: "Team",
 		price: 249,
+		originalPrice: 349,
 		description: "A one-time multi-account license with every Pro capability",
 		features: ["Everything in Pro", "Add and manage other accounts", "Shared mailbox access as available", "Keep the licensed version forever"],
 		icon: Building2,
@@ -53,5 +55,5 @@ export function formatLicensePlan(plan: string): string {
 
 export function formatLicenseDate(value: Date | string | null): string | null {
 	if (!value) return null;
-	return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+	return formatUserDate(value, { dateStyle: "medium", timeStyle: "short" });
 }

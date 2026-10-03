@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import dayjs from "dayjs";
+import { formatUserDate } from "@/lib/time/utils";
 import { ChevronsUpDown, Paperclip } from "lucide-react";
 import { ContactAvatar } from "@/components/contacts/contact-avatar";
 import { QuotedEmailToggle } from "@/components/messages/quoted-email-toggle";
@@ -38,6 +38,7 @@ export function ConversationThread({
 	latestMessagesFirst,
 	expandedAll,
 	onExpandedAllChange,
+	showFullRecipientAddresses = false,
 }: ConversationThreadProps) {
 	const slice = partitionThread(messages, currentMessageId, position, latestMessagesFirst);
 	if (slice.length === 0) return null;
@@ -52,7 +53,7 @@ export function ConversationThread({
 			aria-label={position === "before" ? "Earlier messages in this conversation" : "Later messages in this conversation"}
 			className={cn(position === (latestMessagesFirst ? "before" : "after") ? "pb-6" : "")}
 		>
-			<ol className={cn(!collapsed && "divide-y divide-neutral-200/50", latestMessagesFirst ? "border-y" : "border-b", "border-neutral-200")}>
+			<ol className={cn(!collapsed && "divide-y divide-neutral-200/50", latestMessagesFirst ? "border-t" : "border-b", "border-neutral-200")}>
 				<li className={"border-t-0"}>
 					<ConversationMessageCard
 						message={firstMessage}
@@ -60,6 +61,7 @@ export function ConversationThread({
 						currentAccountName={currentAccountName}
 						ownAddress={ownAddress}
 						ownAddresses={ownAddresses}
+						showFullRecipientAddresses={showFullRecipientAddresses}
 					/>
 				</li>
 				{collapsed ? (
@@ -86,6 +88,7 @@ export function ConversationThread({
 								currentAccountName={currentAccountName}
 								ownAddress={ownAddress}
 								ownAddresses={ownAddresses}
+								showFullRecipientAddresses={showFullRecipientAddresses}
 							/>
 						</li>
 					))
@@ -98,6 +101,7 @@ export function ConversationThread({
 							currentAccountName={currentAccountName}
 							ownAddress={ownAddress}
 							ownAddresses={ownAddresses}
+							showFullRecipientAddresses={showFullRecipientAddresses}
 						/>
 					</li>
 				)}
@@ -113,13 +117,14 @@ export function ConversationMessageCard({
 	ownAddress,
 	ownAddresses,
 	defaultExpanded = false,
+	showFullRecipientAddresses = false,
 }: ConversationMessageCardProps) {
 	const [locallyExpanded, setLocallyExpanded] = useState(defaultExpanded);
 	const [locallyRead, setLocallyRead] = useState(message.read);
 	const expanded = locallyExpanded;
 	const sender = getConversationSender(message, currentAccountName);
 	const senderEmail = getConversationSenderEmail(message);
-	const recipients = getConversationRecipients(message);
+	const recipients = getConversationRecipients(message, showFullRecipientAddresses ? "full" : "address");
 	// const href = `${getMessageBackHref(message.direction, message.status)}/${message.id}`;
 	const outbound = message.direction === "outbound";
 	const attachments = message.attachments.filter((attachment) => attachment.disposition === "attachment");
@@ -179,7 +184,7 @@ export function ConversationMessageCard({
 					</button>
 					<span className={clsx(!locallyRead ? "font-semibold" : "", "flex shrink-0 items-center gap-2 text-xs mr-2 mt-2")}>
 						{attachments.length > 0 && <Paperclip className="h-3.5 w-3.5" aria-label={`${attachments.length} attachments`} />}
-						{dayjs(message.createdAt).format("MMM DD, YYYY, hh:mmA")}
+						{formatUserDate(message.createdAt, { month: "short", day: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
 					</span>
 					<ThreadMessageActions
 						message={message}

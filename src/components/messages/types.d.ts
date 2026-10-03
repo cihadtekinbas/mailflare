@@ -49,15 +49,20 @@ export type MessageSplitLayoutProps = {
 export type MessageListVisibility = {
 	visible: boolean;
 	toggle: () => void;
+	singleColumn: boolean;
+	backHref: string;
+	backLabel: string;
 };
 
 export type BulkMessageToolbarProps = {
 	selectedCount: number;
 	hasUnreadSelection: boolean;
 	hideSelectedCount?: boolean;
-	onAction: (action: BulkMessageAction) => void;
+	onAction: (action: BulkMessageAction, folderId?: string) => void;
 	onClearSelection: () => void;
 	pending: boolean;
+	/** Folder being listed; archived, spam and trash offer a way back instead of the same move. */
+	folder?: MessageFolder;
 };
 
 export type SelectedMessage = Pick<Message, "id" | "read">;
@@ -68,6 +73,7 @@ export type MessageSelectionControl = {
 };
 
 export type BulkMessageSelectionPaneProps = {
+	folder?: MessageFolder;
 	selectedMessages: SelectedMessage[];
 	onClearSelection: () => void;
 };

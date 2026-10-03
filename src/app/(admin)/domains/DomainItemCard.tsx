@@ -27,6 +27,13 @@ export default function DomainItemCard({
   item,
   dns,
   dnsDetails,
+  onSendingProviderChange,
+  sendingProviderBusy,
+  sendingProviderMessage,
+  onReceivingProviderChange,
+  receivingProviderBusy,
+  receivingProviderMessage,
+  onDnsChanged,
   dnsLoading = false,
   dnsError,
   expanded = false,
@@ -39,8 +46,8 @@ export default function DomainItemCard({
   const auth = dns?.auth;
 
   return (
-    <ListRow className="group relative flex-col items-stretch gap-3">
-      <div className="flex items-start gap-4">
+    <ListRow className="group relative flex-col items-stretch gap-3 max-md:rounded-none max-md:border-b max-md:border-neutral-100 max-md:px-0 max-md:py-4 max-md:last:border-b-0">
+      <div className="flex flex-col items-start gap-3 md:flex-row md:gap-4">
         <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-neutral-100 text-neutral-600">
           <Globe2 className="h-5 w-5" />
           <img
@@ -51,7 +58,7 @@ export default function DomainItemCard({
           />
         </span>
 
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className="flex w-full min-w-0 flex-1 flex-col gap-2">
           <span className="min-w-0 truncate pr-10 text-sm font-semibold text-neutral-900">
             {item.hostname}
           </span>
@@ -64,20 +71,41 @@ export default function DomainItemCard({
               <StatusIcon ok={item.status === "active"} className="h-3 w-3" />
               {item.status}
             </Badge>
-            <Badge
-              variant={item.routingEnabled ? "outline" : "secondary"}
-              className={cn("gap-1", !item.routingEnabled && "opacity-50")}
-            >
-              <StatusIcon ok={item.routingEnabled} className="h-3 w-3" />
-              routing
-            </Badge>
-            <Badge
-              variant={item.sendingEnabled ? "outline" : "secondary"}
-              className={cn("gap-1", !item.sendingEnabled && "opacity-50")}
-            >
-              <StatusIcon ok={item.sendingEnabled} className="h-3 w-3" />
-              sending
-            </Badge>
+            {item.receivingProvider === "cloudflare" ? (
+              <Badge
+                variant={item.routingEnabled ? "outline" : "secondary"}
+                className={cn("gap-1", !item.routingEnabled && "opacity-50")}
+              >
+                <StatusIcon ok={item.routingEnabled} className="h-3 w-3" />
+                routing
+              </Badge>
+            ) : item.receivingProvider === "none" ? (
+              <Badge variant="secondary" className="gap-1 opacity-50">
+                sending only
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="gap-1">
+                receiving via {item.receivingProvider === "ses" ? "Amazon SES" : "Resend"}
+              </Badge>
+            )}
+            {item.sendingProvider === "resend" || item.sendingProvider === "ses" ? (
+              <Badge variant="outline" className="gap-1">
+                <StatusIcon ok className="h-3 w-3" />
+                sending via {item.sendingProvider === "ses" ? "Amazon SES" : "Resend"}
+              </Badge>
+            ) : item.sendingProvider === "none" ? (
+              <Badge variant="secondary" className="gap-1 opacity-50">
+                receiving only
+              </Badge>
+            ) : (
+              <Badge
+                variant={item.sendingEnabled ? "outline" : "secondary"}
+                className={cn("gap-1", !item.sendingEnabled && "opacity-50")}
+              >
+                <StatusIcon ok={item.sendingEnabled} className="h-3 w-3" />
+                sending
+              </Badge>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
@@ -121,6 +149,13 @@ export default function DomainItemCard({
           <DomainDnsDetails
             domain={item}
             dns={dnsDetails}
+            onSendingProviderChange={onSendingProviderChange}
+            sendingProviderBusy={sendingProviderBusy}
+            sendingProviderMessage={sendingProviderMessage}
+            onReceivingProviderChange={onReceivingProviderChange}
+            receivingProviderBusy={receivingProviderBusy}
+            receivingProviderMessage={receivingProviderMessage}
+            onDnsChanged={onDnsChanged}
             onSetup={onSetup}
             setupRecord={setupRecord}
             setupMessage={setupMessage}
